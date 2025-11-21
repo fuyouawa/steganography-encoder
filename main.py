@@ -18,21 +18,10 @@ class DragDropBox:
 
         # Enable drag and drop using tkinterdnd2
         self.frame.drop_target_register(DND_FILES)
-        self.frame.dnd_bind('<<DragEnter>>', self.on_drag_enter)
-        self.frame.dnd_bind('<<DragLeave>>', self.on_drag_leave)
         self.frame.dnd_bind('<<Drop>>', self.on_drop)
 
         # Also bind click event for file dialog fallback
         self.frame.bind("<Button-1>", self.on_click)
-
-    def on_drag_enter(self, _):
-        # Highlight the box when file is dragged over
-        self.frame.config(bg="lightblue")
-        return True
-
-    def on_drag_leave(self, _):
-        # Remove highlight when file leaves
-        self.frame.config(bg="white")
 
     def on_drop(self, event):
         # Handle file drop
@@ -66,7 +55,16 @@ class NoiseImageEncoder:
     def __init__(self, root):
         self.root = root
         self.root.title("噪点图像编码器")
-        self.root.geometry("700x500")
+        self.root.geometry("700x600")
+
+        # Configuration variables
+        self.compression_level = tk.IntVar(value=-1)
+        self.noise_width = tk.IntVar(value=0)
+        self.noise_height = tk.IntVar(value=0)
+        self.use_alpha = tk.BooleanVar(value=False)
+
+        # Create configuration frame
+        self.create_config_frame(root)
 
         # Create main frame
         main_frame = tk.Frame(root)
@@ -78,6 +76,41 @@ class NoiseImageEncoder:
         # Status label
         self.status_label = tk.Label(root, text="拖拽图像文件到上方方框", font=("Arial", 10))
         self.status_label.pack(side="bottom", pady=10)
+
+    def create_config_frame(self, parent):
+        """Create configuration options frame at the top"""
+        config_frame = tk.LabelFrame(parent, text="编码选项", font=("Arial", 10, "bold"), padx=10, pady=10)
+        config_frame.pack(fill="x", padx=20, pady=(20, 10))
+
+        # Compression level
+        tk.Label(config_frame, text="压缩等级:").grid(row=0, column=0, sticky="w", padx=(0, 5))
+        compression_frame = tk.Frame(config_frame)
+        compression_frame.grid(row=0, column=1, sticky="w")
+
+        compression_scale = tk.Scale(compression_frame, from_=-1, to=9, orient="horizontal",
+                                   variable=self.compression_level, showvalue=True, length=200)
+        compression_scale.pack(side="left")
+        tk.Label(compression_frame, text="(-1=默认, 0=无压缩, 9=最大压缩)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
+        # Noise image dimensions
+        tk.Label(config_frame, text="噪点图像尺寸:").grid(row=1, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        dimensions_frame = tk.Frame(config_frame)
+        dimensions_frame.grid(row=1, column=1, sticky="w", pady=(10, 0))
+
+        tk.Label(dimensions_frame, text="宽:").pack(side="left")
+        width_entry = tk.Entry(dimensions_frame, textvariable=self.noise_width, width=6)
+        width_entry.pack(side="left", padx=(2, 10))
+
+        tk.Label(dimensions_frame, text="高:").pack(side="left")
+        height_entry = tk.Entry(dimensions_frame, textvariable=self.noise_height, width=6)
+        height_entry.pack(side="left", padx=(2, 0))
+
+        tk.Label(dimensions_frame, text="(0=不指定)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
+        # Alpha channel option
+        tk.Label(config_frame, text="使用alpha通道:").grid(row=2, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        alpha_check = tk.Checkbutton(config_frame, variable=self.use_alpha)
+        alpha_check.grid(row=2, column=1, sticky="w", pady=(10, 0))
 
     def create_drag_drop_boxes(self, parent):
         # Left box for regular images -> noise images
@@ -98,11 +131,27 @@ class NoiseImageEncoder:
         try:
             self.status_label.config(text="正在处理图像...")
 
+            # Determine image format from file extension
+            file_ext = os.path.splitext(file_path)[1].lower()
+            format_mapping = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.bmp': 'image/bmp',
+                '.tiff': 'image/tiff',
+                '.tif': 'image/tiff'
+            }
+            image_format = format_mapping.get(file_ext, 'image/png')
+
             # Load and process image
             with Image.open(file_path) as img:
-                # Convert to RGB if needed
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
+                # Handle alpha channel based on configuration
+                if self.use_alpha.get():
+                    if img.mode != 'RGBA':
+                        img = img.convert('RGBA')
+                else:
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
 
                 # Convert to numpy array
                 import numpy as np
@@ -111,16 +160,25 @@ class NoiseImageEncoder:
                 # Convert image to bytes
                 image_bytes = image_to_bytes(img_array)
 
-                # Add URL prefix
+                # Add URL prefix with detected format
                 base64_data = base64.b64encode(image_bytes).decode('utf-8')
-                data_url = f"data:image/png;base64,{base64_data}"
+                data_url = f"data:{image_format};base64,{base64_data}"
                 data_url_bytes = data_url.encode('utf-8')
 
-                # Compress with zlib
-                compressed_data = zlib.compress(data_url_bytes)
+                # Compress with zlib using configured compression level
+                compression_level = self.compression_level.get()
+                compressed_data = zlib.compress(data_url_bytes, compression_level)
 
-                # Convert to noise image
-                noise_image = bytes_to_noise_image(compressed_data)
+                # Convert to noise image with configured dimensions
+                width = self.noise_width.get()
+                height = self.noise_height.get()
+                use_alpha = self.use_alpha.get()
+
+                # Use 0 to indicate no specification (None)
+                noise_width = width if width > 0 else None
+                noise_height = height if height > 0 else None
+
+                noise_image = bytes_to_noise_image(compressed_data, width=noise_width, height=noise_height, use_alpha=use_alpha)
 
                 # Save noise image
                 output_path = self.get_output_path(file_path, "_noise")
@@ -148,8 +206,25 @@ class NoiseImageEncoder:
 
             # Extract base64 data from data URL
             data_url = data_url_bytes.decode('utf-8')
-            if data_url.startswith("data:image/png;base64,"):
-                base64_data = data_url[len("data:image/png;base64,"):]
+
+            # Parse image format from data URL prefix
+            if data_url.startswith("data:"):
+                # Find the semicolon after the format
+                semicolon_pos = data_url.find(";")
+                if semicolon_pos != -1:
+                    # Extract the format part (e.g., "image/png")
+                    format_part = data_url[5:semicolon_pos]
+
+                    # Check if it's a supported image format
+                    supported_formats = ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff']
+                    if format_part in supported_formats:
+                        # Extract base64 data
+                        base64_prefix = f"data:{format_part};base64,"
+                        base64_data = data_url[len(base64_prefix):]
+                    else:
+                        raise ValueError(f"不支持的图像格式: {format_part}")
+                else:
+                    raise ValueError("无效的数据URL格式")
             else:
                 raise ValueError("无效的数据URL格式")
 
@@ -182,6 +257,7 @@ class NoiseImageEncoder:
         image_array = noise_image[0].detach().cpu().numpy()
         image_array = np.clip(image_array * 255, 0, 255).astype(np.uint8)
 
+        # Determine image mode based on number of channels
         if image_array.shape[2] == 4:
             pil_image = Image.fromarray(image_array, 'RGBA')
         else:
