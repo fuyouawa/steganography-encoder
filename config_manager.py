@@ -1,0 +1,69 @@
+"""
+配置管理模块
+管理应用程序的配置选项
+"""
+import tkinter as tk
+
+
+class ConfigManager:
+    """配置管理器"""
+
+    def __init__(self):
+        # Configuration variables
+        self.compression_level = tk.IntVar(value=-1)
+        self.noise_width = tk.IntVar(value=0)
+        self.noise_height = tk.IntVar(value=0)
+        self.use_alpha = tk.BooleanVar(value=False)
+
+    def create_config_frame(self, parent):
+        """创建配置选项框架"""
+        config_frame = tk.LabelFrame(parent, text="编码选项", font=("Arial", 10, "bold"), padx=10, pady=10)
+        config_frame.pack(fill="x", padx=20, pady=(20, 10))
+
+        # Compression level
+        tk.Label(config_frame, text="压缩等级:").grid(row=0, column=0, sticky="w", padx=(0, 5))
+        compression_frame = tk.Frame(config_frame)
+        compression_frame.grid(row=0, column=1, sticky="w")
+
+        compression_scale = tk.Scale(compression_frame, from_=-1, to=9, orient="horizontal",
+                                   variable=self.compression_level, showvalue=True, length=200)
+        compression_scale.pack(side="left")
+        tk.Label(compression_frame, text="(-1=默认, 0=无压缩, 9=最大压缩)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
+        # Noise image dimensions
+        tk.Label(config_frame, text="噪点图像尺寸:").grid(row=1, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        dimensions_frame = tk.Frame(config_frame)
+        dimensions_frame.grid(row=1, column=1, sticky="w", pady=(10, 0))
+
+        tk.Label(dimensions_frame, text="宽:").pack(side="left")
+        width_entry = tk.Entry(dimensions_frame, textvariable=self.noise_width, width=6)
+        width_entry.pack(side="left", padx=(2, 10))
+
+        tk.Label(dimensions_frame, text="高:").pack(side="left")
+        height_entry = tk.Entry(dimensions_frame, textvariable=self.noise_height, width=6)
+        height_entry.pack(side="left", padx=(2, 0))
+
+        tk.Label(dimensions_frame, text="(0=不指定)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
+        # Alpha channel option
+        tk.Label(config_frame, text="使用alpha通道:").grid(row=2, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        alpha_check = tk.Checkbutton(config_frame, variable=self.use_alpha)
+        alpha_check.grid(row=2, column=1, sticky="w", pady=(10, 0))
+
+        return config_frame
+
+    def get_compression_level(self):
+        """获取压缩等级"""
+        return self.compression_level.get()
+
+    def get_noise_width(self):
+        """获取噪点图像宽度"""
+        return self.noise_width.get()
+
+    def get_noise_height(self):
+        """获取噪点图像高度"""
+        return self.noise_height.get()
+
+    def get_use_alpha(self):
+        """获取是否使用alpha通道"""
+        return self.use_alpha.get()
