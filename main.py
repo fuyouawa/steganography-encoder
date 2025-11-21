@@ -1,5 +1,6 @@
 ﻿import tkinter as tk
 from tkinter import messagebox, filedialog
+from tkinterdnd2 import DND_FILES, TkinterDnD
 import base64
 import zlib
 from PIL import Image
@@ -15,55 +16,51 @@ class DragDropBox:
         self.label.pack(expand=True)
         self.drop_callback = drop_callback
 
-        # Bind drag and drop events
+        # Enable drag and drop using tkinterdnd2
+        self.frame.drop_target_register(DND_FILES)
+        self.frame.dnd_bind('<<DragEnter>>', self.on_drag_enter)
+        self.frame.dnd_bind('<<DragLeave>>', self.on_drag_leave)
+        self.frame.dnd_bind('<<Drop>>', self.on_drop)
+
+        # Also bind click event for file dialog fallback
         self.frame.bind("<Button-1>", self.on_click)
-        self.frame.bind("<Enter>", self.on_drag_enter)
-        self.frame.bind("<Leave>", self.on_drag_leave)
-        self.frame.bind("<B1-Motion>", self.on_drag)
-        self.frame.bind("<ButtonRelease-1>", self.on_drop)
 
-        self.is_dragging = False
-        self.click_start_pos = None
-
-    def on_click(self, event):
-        # Record click start position
-        self.click_start_pos = (event.x, event.y)
-
-    def on_drag_enter(self, event):
+    def on_drag_enter(self, _):
+        # Highlight the box when file is dragged over
         self.frame.config(bg="lightblue")
         return True
 
-    def on_drag_leave(self, event):
+    def on_drag_leave(self, _):
+        # Remove highlight when file leaves
         self.frame.config(bg="white")
 
-    def on_drag(self, event):
-        # Check if this is a real drag (movement beyond a threshold)
-        if self.click_start_pos:
-            dx = abs(event.x - self.click_start_pos[0])
-            dy = abs(event.y - self.click_start_pos[1])
-            # If movement is significant, consider it a drag
-            if dx > 5 or dy > 5:
-                self.is_dragging = True
-
-    def on_drop(self, _):
+    def on_drop(self, event):
+        # Handle file drop
         self.frame.config(bg="white")
 
-        # If this was a real drag operation, open file dialog
-        if self.is_dragging:
-            # For file system drag-and-drop, we'll use the file dialog approach
-            # since Tkinter doesn't natively support file drag-and-drop
-            file_path = filedialog.askopenfilename()
-            if file_path:
-                self.drop_callback(file_path)
-        else:
-            # This was a simple click, open file dialog
-            file_path = filedialog.askopenfilename()
-            if file_path:
-                self.drop_callback(file_path)
+        # Get the dropped file path
+        file_path = event.data
 
-        # Reset state
-        self.is_dragging = False
-        self.click_start_pos = None
+        # tkinterdnd2 returns file paths in a specific format
+        # On Windows, it might be in curly braces or as a string
+        if file_path.startswith('{') and file_path.endswith('}'):
+            # Remove curly braces and split multiple files
+            file_path = file_path[1:-1]
+            files = file_path.split('} {')
+            # Use the first file
+            file_path = files[0]
+
+        # Clean up the file path (remove any quotes or extra characters)
+        file_path = file_path.strip().strip('"')
+
+        if file_path and os.path.exists(file_path):
+            self.drop_callback(file_path)
+
+    def on_click(self, _):
+        # Fallback: open file dialog on click
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            self.drop_callback(file_path)
 
 class NoiseImageEncoder:
     def __init__(self, root):
@@ -218,6 +215,6 @@ class NoiseImageEncoder:
         pil_image.save(output_path)
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = TkinterDnD.Tk()
     app = NoiseImageEncoder(root)
     root.mainloop()
