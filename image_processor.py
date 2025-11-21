@@ -151,9 +151,12 @@ class ImageProcessor:
         pil_image = Image.fromarray(image_array)
         pil_image.save(output_path)
 
-    def get_output_path(self, input_path, suffix):
+    def get_output_path(self, input_path, suffix, custom_extension=None):
         """生成输出文件路径"""
         directory = os.path.dirname(input_path)
         filename = os.path.basename(input_path)
         name, ext = os.path.splitext(filename)
+
+        if custom_extension is not None:
+            ext = f".{custom_extension}"
         return os.path.join(directory, f"{name}{suffix}{ext}")

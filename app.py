@@ -69,7 +69,7 @@ class NoiseImageEncoder:
             )
 
             # Save noise image
-            output_path = self.image_processor.get_output_path(file_path, "_noise")
+            output_path = self.image_processor.get_output_path(file_path, "_noise", custom_extension="png")
             self.image_processor.save_noise_image(noise_image, output_path)
 
             self.status_label.config(text=f"转换成功！噪点图像已保存到: {output_path}")
