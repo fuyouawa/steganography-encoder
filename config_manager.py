@@ -14,6 +14,8 @@ class ConfigManager:
         self.steganography_width = tk.IntVar(value=0)
         self.steganography_height = tk.IntVar(value=0)
         self.use_alpha = tk.BooleanVar(value=False)
+        self.top_margin_ratio = tk.DoubleVar(value=20.0)  # 20% top margin (stored as percentage)
+        self.bottom_margin_ratio = tk.DoubleVar(value=20.0)  # 20% bottom margin (stored as percentage)
 
     def create_config_frame(self, parent):
         """创建配置选项框架"""
@@ -50,6 +52,25 @@ class ConfigManager:
         alpha_check = tk.Checkbutton(config_frame, variable=self.use_alpha)
         alpha_check.grid(row=2, column=1, sticky="w", pady=(10, 0))
 
+        # Margin ratios
+        tk.Label(config_frame, text="上预留区域:").grid(row=3, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        top_margin_frame = tk.Frame(config_frame)
+        top_margin_frame.grid(row=3, column=1, sticky="w", pady=(10, 0))
+
+        top_margin_scale = tk.Scale(top_margin_frame, from_=0, to=100, orient="horizontal",
+                                   variable=self.top_margin_ratio, showvalue=True, length=150, resolution=1)
+        top_margin_scale.pack(side="left")
+        tk.Label(top_margin_frame, text="%", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
+        tk.Label(config_frame, text="下预留区域:").grid(row=4, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        bottom_margin_frame = tk.Frame(config_frame)
+        bottom_margin_frame.grid(row=4, column=1, sticky="w", pady=(10, 0))
+
+        bottom_margin_scale = tk.Scale(bottom_margin_frame, from_=0, to=100, orient="horizontal",
+                                      variable=self.bottom_margin_ratio, showvalue=True, length=150, resolution=1)
+        bottom_margin_scale.pack(side="left")
+        tk.Label(bottom_margin_frame, text="%", font=("Arial", 8)).pack(side="left", padx=(5, 0))
+
         return config_frame
 
     def get_compression_level(self):
@@ -67,3 +88,11 @@ class ConfigManager:
     def get_use_alpha(self):
         """获取是否使用alpha通道"""
         return self.use_alpha.get()
+
+    def get_top_margin_ratio(self):
+        """获取上预留区域百分比（返回小数）"""
+        return self.top_margin_ratio.get() / 100.0
+
+    def get_bottom_margin_ratio(self):
+        """获取下预留区域百分比（返回小数）"""
+        return self.bottom_margin_ratio.get() / 100.0

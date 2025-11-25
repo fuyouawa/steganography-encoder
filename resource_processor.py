@@ -19,7 +19,7 @@ class ResourceProcessor:
     def __init__(self):
         pass
 
-    def process_resource_to_steganography(self, file_path, compression_level, steganography_width, steganography_height, use_alpha):
+    def process_resource_to_steganography(self, file_path, compression_level, steganography_width, steganography_height, use_alpha, top_margin_ratio, bottom_margin_ratio):
         """处理普通资源文件转换为隐写图像"""
         try:
             # Read file as raw bytes
@@ -47,21 +47,28 @@ class ResourceProcessor:
             width = steganography_width if steganography_width > 0 else None
             height = steganography_height if steganography_height > 0 else None
 
-            steganography_image = encode_steganography(data_with_header, width=width, height=height, use_alpha=use_alpha)
+            steganography_image = encode_steganography(
+                data_with_header,
+                width=width,
+                height=height,
+                use_alpha=use_alpha,
+                top_margin_ratio=top_margin_ratio,
+                bottom_margin_ratio=bottom_margin_ratio
+            )
 
             return steganography_image
 
         except Exception as e:
             raise Exception(f"处理文件时出错: {str(e)}")
 
-    def process_steganography_to_resource(self, file_path):
+    def process_steganography_to_resource(self, file_path, top_margin_ratio, bottom_margin_ratio):
         """处理隐写图像转换为原始资源文件"""
         try:
             # Load steganography image
             steganography_image = self._load_steganography_image(file_path)
 
             # Decode bytes from steganography image
-            data_with_header = decode_steganography(steganography_image)
+            data_with_header = decode_steganography(steganography_image, top_margin_ratio=top_margin_ratio, bottom_margin_ratio=bottom_margin_ratio)
 
             # Extract ResourceHeader (first 4 bytes)
             header_bytes = data_with_header[:4]
