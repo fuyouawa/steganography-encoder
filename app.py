@@ -16,10 +16,10 @@ class SteganographyEncoder:
     def __init__(self, root):
         self.root = root
         self.root.title("隐写图像编码器")
-        self.root.geometry("700x600")
+        self.root.geometry("700x650")
 
         # Initialize managers
-        self.config_manager = ConfigManager()
+        self.config_manager = ConfigManager(on_always_on_top_changed=self._on_always_on_top_changed)
         self.resource_processor = ResourceProcessor()
 
         # Create configuration frame
@@ -104,3 +104,7 @@ class SteganographyEncoder:
         except Exception as e:
             self.status_label.config(text="处理失败")
             messagebox.showerror("错误", f"处理隐写图像时出错:\n{str(e)}")
+
+    def _on_always_on_top_changed(self, always_on_top):
+        """置顶状态改变时的回调"""
+        self.root.attributes("-topmost", always_on_top)
