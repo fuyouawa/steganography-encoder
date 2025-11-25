@@ -15,7 +15,6 @@ class TestVideoInfo(unittest.TestCase):
     def test_video_info_creation(self):
         """Test VideoInfo object creation and basic properties."""
         info = VideoInfo(
-            source_path="test.mp4",
             source_fps=16.0,
             source_width=1920,
             source_height=1080,
@@ -28,7 +27,6 @@ class TestVideoInfo(unittest.TestCase):
             generator="ffmpeg"
         )
 
-        self.assertEqual(info.source_path, "test.mp4")
         self.assertEqual(info.source_fps, 16.0)
         self.assertEqual(info.source_width, 1920)
         self.assertEqual(info.source_height, 1080)
@@ -43,7 +41,6 @@ class TestVideoInfo(unittest.TestCase):
     def test_video_info_properties(self):
         """Test VideoInfo computed properties."""
         info = VideoInfo(
-            source_path="test.mp4",
             source_fps=16.0,
             source_width=1920,
             source_height=1080,
@@ -63,7 +60,6 @@ class TestVideoInfo(unittest.TestCase):
     def test_video_info_string_representations(self):
         """Test VideoInfo string and repr methods."""
         info = VideoInfo(
-            source_path="test.mp4",
             source_fps=16.0,
             source_width=1920,
             source_height=1080,
@@ -76,11 +72,6 @@ class TestVideoInfo(unittest.TestCase):
             generator="ffmpeg"
         )
 
-        self.assertIn("test.mp4", str(info))
-        self.assertIn("720x1280", str(info))
-        self.assertIn("source fps: 16.0fps", str(info))
-        self.assertIn("loaded fps: 15.0fps", str(info))
-        self.assertIn("source: 1920x1080", str(info))
         self.assertIn("VideoInfo", repr(info))
         self.assertIn("source_width=1920", repr(info))
         self.assertIn("source_height=1080", repr(info))

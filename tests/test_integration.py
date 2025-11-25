@@ -49,7 +49,7 @@ class TestIntegration(unittest.TestCase):
 
         # Combine frames back to video
         output_path = os.path.join(self.temp_dir, "output.gif")
-        result_path = combine_animated_image(
+        result_path, extension = combine_animated_image(
             frames=frames_list,
             output_path=output_path,
             format_ext="gif",

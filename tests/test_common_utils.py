@@ -13,7 +13,6 @@ from utils.video.common import (
     combine_animated_image,
     target_size,
     batched,
-    frames_to_tensor,
     _ensure_even_dimensions
 )
 
@@ -86,20 +85,6 @@ class TestCommonUtilities(unittest.TestCase):
         self.assertEqual(batches[1], (3, 4, 5))
         self.assertEqual(batches[2], (6, 7, 8))
         self.assertEqual(batches[3], (9,))
-
-    def test_frames_to_tensor(self):
-        """Test frame generator to tensor conversion."""
-        # Create dummy frame generator
-        def dummy_frame_generator():
-            for i in range(5):
-                yield np.random.rand(64, 64, 3).astype(np.float32)
-
-        tensor = frames_to_tensor(dummy_frame_generator(), 64, 64, 3)
-
-        self.assertIsInstance(tensor, torch.Tensor)
-        self.assertEqual(tensor.shape, (5, 64, 64, 3))
-        self.assertEqual(tensor.dtype, torch.float32)
-
 
 if __name__ == "__main__":
     unittest.main()

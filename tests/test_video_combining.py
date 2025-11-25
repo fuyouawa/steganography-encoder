@@ -39,7 +39,7 @@ class TestVideoCombining(unittest.TestCase):
         """Test basic FFmpeg video combining."""
         output_path = os.path.join(self.temp_dir, "test_ffmpeg.mp4")
 
-        result_path = ffmpeg_combine_video(
+        result_path, extension = ffmpeg_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -47,6 +47,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -54,7 +55,7 @@ class TestVideoCombining(unittest.TestCase):
         """Test FFmpeg video combining with pingpong effect."""
         output_path = os.path.join(self.temp_dir, "test_ffmpeg_pingpong.mp4")
 
-        result_path = ffmpeg_combine_video(
+        result_path, extension = ffmpeg_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -63,6 +64,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -76,7 +78,7 @@ class TestVideoCombining(unittest.TestCase):
             "description": "A test video created for unit testing"
         }
 
-        result_path = ffmpeg_combine_video(
+        result_path, extension = ffmpeg_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -85,6 +87,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -97,7 +100,7 @@ class TestVideoCombining(unittest.TestCase):
                 output_path = os.path.join(self.temp_dir, f"test_ffmpeg_{format_name}.{get_video_format(format_name)['extension']}")
 
                 try:
-                    result_path = ffmpeg_combine_video(
+                    result_path, extension = ffmpeg_combine_video(
                         image_batch=self.test_frames,
                         output_path=output_path,
                         frame_rate=10,
@@ -105,6 +108,9 @@ class TestVideoCombining(unittest.TestCase):
                     )
 
                     self.assertEqual(result_path, output_path)
+                    # Verify extension matches the expected format
+                    expected_extension = get_video_format(format_name)["extension"]
+                    self.assertEqual(extension, expected_extension)
                     self.assertTrue(os.path.exists(output_path))
                     self.assertGreater(os.path.getsize(output_path), 0)
                 except Exception as e:
@@ -127,7 +133,7 @@ class TestVideoCombining(unittest.TestCase):
         """Test basic OpenCV video combining."""
         output_path = os.path.join(self.temp_dir, "test_opencv.mp4")
 
-        result_path = opencv_combine_video(
+        result_path, extension = opencv_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -135,6 +141,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -142,7 +149,7 @@ class TestVideoCombining(unittest.TestCase):
         """Test OpenCV video combining with pingpong effect."""
         output_path = os.path.join(self.temp_dir, "test_opencv_pingpong.mp4")
 
-        result_path = opencv_combine_video(
+        result_path, extension = opencv_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -151,6 +158,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -163,7 +171,7 @@ class TestVideoCombining(unittest.TestCase):
                 output_path = os.path.join(self.temp_dir, f"test_opencv.{format_ext}")
 
                 try:
-                    result_path = opencv_combine_video(
+                    result_path, extension = opencv_combine_video(
                         image_batch=self.test_frames,
                         output_path=output_path,
                         frame_rate=10,
@@ -171,6 +179,7 @@ class TestVideoCombining(unittest.TestCase):
                     )
 
                     self.assertEqual(result_path, output_path)
+                    self.assertEqual(extension, format_ext)
                     self.assertTrue(os.path.exists(output_path))
                     self.assertGreater(os.path.getsize(output_path), 0)
                 except Exception as e:
@@ -181,7 +190,7 @@ class TestVideoCombining(unittest.TestCase):
         """Test OpenCV video combining with image formats (should fall back to Pillow)."""
         output_path = os.path.join(self.temp_dir, "test_opencv.gif")
 
-        result_path = opencv_combine_video(
+        result_path, extension = opencv_combine_video(
             image_batch=self.test_frames,
             output_path=output_path,
             frame_rate=10,
@@ -189,6 +198,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "gif")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -198,14 +208,14 @@ class TestVideoCombining(unittest.TestCase):
         opencv_output = os.path.join(self.temp_dir, "test_opencv_comparison.mp4")
 
         # Use same parameters for both
-        ffmpeg_result = ffmpeg_combine_video(
+        ffmpeg_result, ffmpeg_extension = ffmpeg_combine_video(
             image_batch=self.test_frames,
             output_path=ffmpeg_output,
             frame_rate=10,
             video_format="video/h264-mp4"
         )
 
-        opencv_result = opencv_combine_video(
+        opencv_result, opencv_extension = opencv_combine_video(
             image_batch=self.test_frames,
             output_path=opencv_output,
             frame_rate=10,
@@ -214,7 +224,9 @@ class TestVideoCombining(unittest.TestCase):
 
         # Both should succeed
         self.assertEqual(ffmpeg_result, ffmpeg_output)
+        self.assertEqual(ffmpeg_extension, "mp4")
         self.assertEqual(opencv_result, opencv_output)
+        self.assertEqual(opencv_extension, "mp4")
         self.assertTrue(os.path.exists(ffmpeg_output))
         self.assertTrue(os.path.exists(opencv_output))
 
@@ -244,7 +256,7 @@ class TestVideoCombining(unittest.TestCase):
         output_path = os.path.join(self.temp_dir, "test_single.mp4")
         single_frame = [Image.new("RGB", (100, 100), color=(255, 0, 0))]
 
-        result_path = ffmpeg_combine_video(
+        result_path, extension = ffmpeg_combine_video(
             image_batch=single_frame,
             output_path=output_path,
             frame_rate=10,
@@ -252,6 +264,7 @@ class TestVideoCombining(unittest.TestCase):
         )
 
         self.assertEqual(result_path, output_path)
+        self.assertEqual(extension, "mp4")
         self.assertTrue(os.path.exists(output_path))
         self.assertGreater(os.path.getsize(output_path), 0)
 
@@ -269,7 +282,7 @@ class TestVideoCombining(unittest.TestCase):
         # Both implementations should handle varying frame sizes
         for combine_func in [ffmpeg_combine_video, opencv_combine_video]:
             with self.subTest(func=combine_func.__name__):
-                result_path = combine_func(
+                result_path, extension = combine_func(
                     image_batch=varying_frames,
                     output_path=output_path,
                     frame_rate=10,
@@ -277,6 +290,7 @@ class TestVideoCombining(unittest.TestCase):
                 )
 
                 self.assertEqual(result_path, output_path)
+                self.assertEqual(extension, "mp4")
                 self.assertTrue(os.path.exists(output_path))
                 self.assertGreater(os.path.getsize(output_path), 0)
 

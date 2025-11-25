@@ -36,7 +36,7 @@ class TestAnimatedImageCombining(unittest.TestCase):
         """Test animated GIF creation."""
         output_path = os.path.join(self.temp_dir, "test.gif")
 
-        result_path = combine_animated_image(
+        result_path, extension = combine_animated_image(
             frames=self.test_frames,
             output_path=output_path,
             format_ext="gif",
@@ -55,7 +55,7 @@ class TestAnimatedImageCombining(unittest.TestCase):
         """Test animated WebP creation."""
         output_path = os.path.join(self.temp_dir, "test.webp")
 
-        result_path = combine_animated_image(
+        result_path, extension = combine_animated_image(
             frames=self.test_frames,
             output_path=output_path,
             format_ext="webp",

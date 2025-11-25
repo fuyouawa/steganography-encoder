@@ -11,8 +11,8 @@ class ConfigManager:
     def __init__(self):
         # Configuration variables
         self.compression_level = tk.IntVar(value=-1)
-        self.noise_width = tk.IntVar(value=0)
-        self.noise_height = tk.IntVar(value=0)
+        self.steganography_width = tk.IntVar(value=0)
+        self.steganography_height = tk.IntVar(value=0)
         self.use_alpha = tk.BooleanVar(value=False)
 
     def create_config_frame(self, parent):
@@ -30,17 +30,17 @@ class ConfigManager:
         compression_scale.pack(side="left")
         tk.Label(compression_frame, text="(-1=默认, 0=无压缩, 9=最大压缩)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
 
-        # Noise image dimensions
-        tk.Label(config_frame, text="噪点图像尺寸:").grid(row=1, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        # Steganography image dimensions
+        tk.Label(config_frame, text="隐写图像尺寸:").grid(row=1, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
         dimensions_frame = tk.Frame(config_frame)
         dimensions_frame.grid(row=1, column=1, sticky="w", pady=(10, 0))
 
         tk.Label(dimensions_frame, text="宽:").pack(side="left")
-        width_entry = tk.Entry(dimensions_frame, textvariable=self.noise_width, width=6)
+        width_entry = tk.Entry(dimensions_frame, textvariable=self.steganography_width, width=6)
         width_entry.pack(side="left", padx=(2, 10))
 
         tk.Label(dimensions_frame, text="高:").pack(side="left")
-        height_entry = tk.Entry(dimensions_frame, textvariable=self.noise_height, width=6)
+        height_entry = tk.Entry(dimensions_frame, textvariable=self.steganography_height, width=6)
         height_entry.pack(side="left", padx=(2, 0))
 
         tk.Label(dimensions_frame, text="(0=不指定)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
@@ -57,12 +57,12 @@ class ConfigManager:
         return self.compression_level.get()
 
     def get_noise_width(self):
-        """获取噪点图像宽度"""
-        return self.noise_width.get()
+        """获取隐写图像宽度"""
+        return self.steganography_width.get()
 
     def get_noise_height(self):
-        """获取噪点图像高度"""
-        return self.noise_height.get()
+        """获取隐写图像高度"""
+        return self.steganography_height.get()
 
     def get_use_alpha(self):
         """获取是否使用alpha通道"""
