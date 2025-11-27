@@ -11,7 +11,11 @@ import torch
 from utils.encoding import encode_steganography, decode_steganography
 from utils.format import file_extension_to_mime_type, mime_type_to_file_extension, static_image_formats
 from utils.serialization import ResourceHeader, CompressionMode, RESOURCE_HEADER_SIZE, SerializationFormat, split_bytes_with_headers
-from utils.image import bytes_list_to_image_batch, encrypt_image, image_to_bytes, bytes_to_image
+from utils.image import bytes_list_to_image_batch, encrypt_image, image_to_bytes, bytes_to_image, encrypt_image_batch
+from utils.video import ffmpeg_combine_video, opencv_combine_video
+
+import tempfile
+temp_dir = tempfile.mkdtemp()
 
 class ResourceProcessor:
     """资源文件处理器"""
@@ -19,7 +23,16 @@ class ResourceProcessor:
     def __init__(self):
         pass
 
-    def process_resource_to_steganography(self, file_path, compression_level, steganography_width, steganography_height, use_alpha, top_margin_ratio, bottom_margin_ratio, image_encryption_method):
+    def process_resource_to_steganography(self, 
+        file_path,
+        compression_level, 
+        steganography_width, 
+        steganography_height, 
+        use_alpha, 
+        top_margin_ratio, 
+        bottom_margin_ratio, 
+        image_encryption_method
+    ):
         """处理普通资源文件转换为隐写图像"""
         try:
             # Get file extension and convert to MIME type
@@ -81,7 +94,14 @@ class ResourceProcessor:
         except Exception as e:
             raise Exception(f"处理文件时出错: {str(e)}")
 
-    def process_steganography_to_resource(self, file_path, top_margin_ratio, bottom_margin_ratio, image_encryption_method):
+    def process_steganography_to_resource(self, 
+        file_path, 
+        top_margin_ratio, 
+        bottom_margin_ratio, 
+        image_encryption_method, 
+        video_synthesis_mode, 
+        video_frame_rate
+    ):
         """处理隐写图像转换为原始资源文件"""
         try:
             # Load steganography image
@@ -105,7 +125,7 @@ class ResourceProcessor:
 
             mime_type = resource_header.mime_type
             if resource_header.serialization_format == SerializationFormat.BYTES_WITH_HEADERS:
-                file_bytes, mime_type = self._process_bytes_with_headers(file_bytes, mime_type)
+                file_bytes, mime_type = self._process_bytes_with_headers(file_bytes, mime_type, image_encryption_method, video_synthesis_mode, video_frame_rate)
 
             # Check if extracted file is an image and decryption is needed
             elif mime_type in static_image_formats and image_encryption_method != "none":
@@ -127,14 +147,42 @@ class ResourceProcessor:
             raise Exception(f"处理隐写图像时出错: {str(e)}")
         
 
-    def _process_bytes_with_headers(self, file_bytes: bytes, mime_type: str) -> tuple[bytes, str]:
+    def _process_bytes_with_headers(self, 
+        file_bytes: bytes,
+        mime_type: str, 
+        image_encryption_method,
+        video_synthesis_mode, 
+        video_frame_rate
+    ):
         if mime_type not in static_image_formats:
             raise ValueError(f"Unsupported MIME type: {mime_type}")
+        
         file_bytes_list = split_bytes_with_headers(file_bytes)
         image_batch, mask_batch = bytes_list_to_image_batch(file_bytes_list)
-        #TODO
-        pass
 
+        if image_encryption_method != "none":
+            image_batch = encrypt_image_batch(image_batch, image_encryption_method)
+
+        if video_synthesis_mode == "ffmpeg":
+            result_path, extension = ffmpeg_combine_video(
+                image_batch=image_batch,
+                output_path=os.path.join(temp_dir, "temp.mp4"), 
+                frame_rate=video_frame_rate,
+                video_format="video/h264-mp4")
+        elif video_synthesis_mode == "opencv":
+            result_path, extension = opencv_combine_video(
+                image_batch=image_batch,
+                output_path=os.path.join(temp_dir, "temp.mp4"), 
+                frame_rate=video_frame_rate,
+                video_format="video/mp4")
+        else:
+            raise ValueError(f"Unsupported video synthesis mode: {video_synthesis_mode}")
+        
+        with open(result_path, "rb") as f:
+            file_bytes = f.read()
+        os.remove(result_path)
+        
+        return file_bytes, file_extension_to_mime_type(extension)
 
     def _load_steganography_image(self, file_path):
         """加载隐写图像并转换为张量"""

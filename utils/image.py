@@ -39,6 +39,17 @@ def encrypt_image(image, operation):
 
     return processed_image
 
+def encrypt_image_batch(image_batch, operation):
+    """Apply encryption/obfuscation operation to image batch."""
+    batch_size = image_batch.shape[0]
+    processed_batch = []
+
+    for i in range(batch_size):
+        single_image = image_batch[i:i + 1]
+        processed_image = encrypt_image(single_image, operation)
+        processed_batch.append(processed_image)
+
+    return torch.cat(processed_batch, dim=0)
 
 def _single_image_to_bytes(image, format="image/png"):
     """Convert single image (numpy array) to bytes."""
