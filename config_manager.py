@@ -4,12 +4,18 @@
 """
 import tkinter as tk
 from accordion_widget import AccordionWidget
-
+from utils.video import FFMPEG_FORMAT_MAPPING, OPENCV_FORMAT_MAPPING, ffmpeg_path
+from utils.format import animated_image_formats
 
 class ConfigManager:
     """配置管理器"""
 
     def __init__(self, on_always_on_top_changed=None):
+        self.ffmpeg_formats = []
+        if ffmpeg_path is not None:
+            self.ffmpeg_formats = ["video/"+x for x in FFMPEG_FORMAT_MAPPING.keys()]
+        self.opencv_formats = ["video/"+x for x in OPENCV_FORMAT_MAPPING.keys()]
+
         # Configuration variables
         self.compression_level = tk.IntVar(value=-1)
         self.steganography_width = tk.IntVar(value=0)
@@ -25,6 +31,10 @@ class ConfigManager:
         self.video_frame_rate = tk.IntVar(value=16)  # Video frame rate
         self.image_encryption_method = tk.StringVar(value="invert")  # none, invert, xor-16, xor-32, xor-64, xor-128
 
+        # Video format configuration variables
+        self.ffmpeg_format = tk.StringVar(value=self.ffmpeg_formats[0])  # Default FFmpeg format
+        self.opencv_format = tk.StringVar(value=self.opencv_formats[0])  # Default OpenCV format
+
     def create_config_frame(self, parent):
         """创建配置选项框架"""
         # 创建手风琴控件
@@ -34,7 +44,7 @@ class ConfigManager:
         general_content = tk.Frame(accordion.main_frame)
 
         # Compression level
-        tk.Label(general_content, text="压缩等级:").grid(row=0, column=0, sticky="w", padx=(0, 5))
+        tk.Label(general_content, text="资源数据压缩等级:").grid(row=0, column=0, sticky="w", padx=(0, 5))
         compression_frame = tk.Frame(general_content)
         compression_frame.grid(row=0, column=1, sticky="w")
 
@@ -44,7 +54,7 @@ class ConfigManager:
         tk.Label(compression_frame, text="(-1=默认, 0=无压缩, 9=最大压缩)", font=("Arial", 8)).pack(side="left", padx=(5, 0))
 
         # Margin ratios
-        tk.Label(general_content, text="上预留区域:").grid(row=3, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        tk.Label(general_content, text="隐写图像上预留区域:").grid(row=3, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
         top_margin_frame = tk.Frame(general_content)
         top_margin_frame.grid(row=3, column=1, sticky="w", pady=(10, 0))
 
@@ -53,7 +63,7 @@ class ConfigManager:
         top_margin_scale.pack(side="left")
         tk.Label(top_margin_frame, text="%", font=("Arial", 8)).pack(side="left", padx=(5, 0))
 
-        tk.Label(general_content, text="下预留区域:").grid(row=4, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        tk.Label(general_content, text="隐写图像下预留区域:").grid(row=4, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
         bottom_margin_frame = tk.Frame(general_content)
         bottom_margin_frame.grid(row=4, column=1, sticky="w", pady=(10, 0))
 
@@ -63,7 +73,7 @@ class ConfigManager:
         tk.Label(bottom_margin_frame, text="%", font=("Arial", 8)).pack(side="left", padx=(5, 0))
 
         # Image decryption method
-        tk.Label(general_content, text="图像加密/解密:").grid(row=5, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        tk.Label(general_content, text="资源图像加密/解密:").grid(row=5, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
         encryption_frame = tk.Frame(general_content)
         encryption_frame.grid(row=5, column=1, sticky="w", pady=(10, 0))
 
@@ -129,6 +139,22 @@ class ConfigManager:
         frame_rate_scale.pack(side="left")
         tk.Label(frame_rate_frame, text="fps", font=("Arial", 8)).pack(side="left", padx=(5, 0))
 
+        # FFmpeg format selection
+        tk.Label(decoding_content, text="FFmpeg格式:").grid(row=3, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        ffmpeg_format_frame = tk.Frame(decoding_content)
+        ffmpeg_format_frame.grid(row=3, column=1, sticky="w", pady=(10, 0))
+
+        ffmpeg_combo = tk.OptionMenu(ffmpeg_format_frame, self.ffmpeg_format, *(animated_image_formats + self.ffmpeg_formats))
+        ffmpeg_combo.pack(side="left")
+
+        # OpenCV format selection
+        tk.Label(decoding_content, text="OpenCV格式:").grid(row=4, column=0, sticky="w", padx=(0, 5), pady=(10, 0))
+        opencv_format_frame = tk.Frame(decoding_content)
+        opencv_format_frame.grid(row=4, column=1, sticky="w", pady=(10, 0))
+
+        opencv_combo = tk.OptionMenu(opencv_format_frame, self.opencv_format, *(animated_image_formats + self.opencv_formats))
+        opencv_combo.pack(side="left")
+
         # 应用程序设置分组
         app_settings_content = tk.Frame(accordion.main_frame)
 
@@ -137,7 +163,7 @@ class ConfigManager:
         always_on_top_check = tk.Checkbutton(app_settings_content, variable=self.always_on_top,
                                            command=self._on_always_on_top_changed)
         always_on_top_check.grid(row=0, column=1, sticky="w")
-
+    
         # 添加分组到手风琴控件
         accordion.add_section("通用选项", general_content, is_expanded=False)
         accordion.add_section("编码选项", encoding_content, is_expanded=False)
@@ -190,3 +216,11 @@ class ConfigManager:
     def get_image_encryption_method(self):
         """获取图像加密方法"""
         return self.image_encryption_method.get()
+
+    def get_ffmpeg_format(self):
+        """获取FFmpeg格式"""
+        return self.ffmpeg_format.get()
+
+    def get_opencv_format(self):
+        """获取OpenCV格式"""
+        return self.opencv_format.get()

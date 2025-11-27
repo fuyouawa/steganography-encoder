@@ -102,6 +102,9 @@ class SteganographyEncoder:
             video_synthesis_mode = self.config_manager.get_video_synthesis_mode()
             video_frame_rate = self.config_manager.get_video_frame_rate()
 
+            ffmpeg_format = self.config_manager.get_ffmpeg_format()
+            opencv_format = self.config_manager.get_opencv_format()
+
             # Process steganography image
             file_bytes, file_extension = self.resource_processor.process_steganography_to_resource(
                 file_path, 
@@ -109,7 +112,10 @@ class SteganographyEncoder:
                 bottom_margin_ratio, 
                 image_encryption_method, 
                 video_synthesis_mode, 
-                video_frame_rate)
+                video_frame_rate,
+                ffmpeg_format,
+                opencv_format
+            )
 
             # Save resource file
             output_path = self.resource_processor.get_output_path(file_path, "_decoded", custom_extension=file_extension)

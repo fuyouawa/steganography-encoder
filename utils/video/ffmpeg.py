@@ -70,9 +70,9 @@ WEBM = {
 
 # Format mapping dictionary for easy lookup
 FORMAT_MAPPING = {
-    "av1-webm": AV1_WEBM,
     "h264-mp4": H264_MP4,
     "h265-mp4": H265_MP4,
+    "av1-webm": AV1_WEBM,
     "webm": WEBM
 }
 

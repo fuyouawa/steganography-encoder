@@ -100,7 +100,9 @@ class ResourceProcessor:
         bottom_margin_ratio, 
         image_encryption_method, 
         video_synthesis_mode, 
-        video_frame_rate
+        video_frame_rate,
+        ffmpeg_format,
+        opencv_format
     ):
         """处理隐写图像转换为原始资源文件"""
         try:
@@ -125,7 +127,15 @@ class ResourceProcessor:
 
             mime_type = resource_header.mime_type
             if resource_header.serialization_format == SerializationFormat.BYTES_WITH_HEADERS:
-                file_bytes, mime_type = self._process_bytes_with_headers(file_bytes, mime_type, image_encryption_method, video_synthesis_mode, video_frame_rate)
+                file_bytes, mime_type = self._process_bytes_with_headers(
+                    file_bytes,
+                    mime_type, 
+                    image_encryption_method, 
+                    video_synthesis_mode, 
+                    video_frame_rate,
+                    ffmpeg_format,
+                    opencv_format
+                )
 
             # Check if extracted file is an image and decryption is needed
             elif mime_type in static_image_formats and image_encryption_method != "none":
@@ -152,7 +162,9 @@ class ResourceProcessor:
         mime_type: str, 
         image_encryption_method,
         video_synthesis_mode, 
-        video_frame_rate
+        video_frame_rate,
+        ffmpeg_format,
+        opencv_format
     ):
         if mime_type not in static_image_formats:
             raise ValueError(f"Unsupported MIME type: {mime_type}")
@@ -168,13 +180,13 @@ class ResourceProcessor:
                 image_batch=image_batch,
                 output_path=os.path.join(temp_dir, "temp.mp4"), 
                 frame_rate=video_frame_rate,
-                video_format="video/h264-mp4")
+                video_format=ffmpeg_format)
         elif video_synthesis_mode == "opencv":
             result_path, extension = opencv_combine_video(
                 image_batch=image_batch,
                 output_path=os.path.join(temp_dir, "temp.mp4"), 
                 frame_rate=video_frame_rate,
-                video_format="video/mp4")
+                video_format=opencv_format)
         else:
             raise ValueError(f"Unsupported video synthesis mode: {video_synthesis_mode}")
         
